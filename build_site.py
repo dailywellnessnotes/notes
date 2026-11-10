@@ -2,39 +2,25 @@
 
 from __future__ import annotations
 
-import html
-import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 SITE = "https://dailywellnessnotes.github.io/notes"
-AFFILIATE_DISCLOSURE = (
-    "This page contains affiliate links. If you shop through these links, "
-    "I may earn a commission."
-)
-DISCLAIMER = (
-    "This content is not medical advice. Consult a healthcare professional "
-    "before using a supplement."
-)
-
 PRODUCTS = {
     "kolajen": {
         "name": "Collagen Select",
         "link": "https://nplink.net/z8oi2hbc",
         "category": "Skin rituals",
-        "color": "peach",
     },
     "sac": {
         "name": "Folisin",
         "link": "https://nplink.net/3g8g0etk",
         "category": "Hair care",
-        "color": "sage",
     },
     "stres": {
         "name": "Restilen",
         "link": "https://nplink.net/k0tsudy0",
         "category": "Slow living",
-        "color": "lilac",
     },
 }
 
@@ -169,88 +155,21 @@ ARTICLES = [
     },
 ]
 
-CSS = """
-:root{--ink:#26312e;--muted:#66716c;--paper:#fbfaf7;--line:#e8e7df;--sage:#d9e2d4;--peach:#f5e4d8;--lilac:#ebe6ef}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--paper);color:var(--ink);font:17px/1.7 Georgia,serif}
-a{color:inherit}nav,.wrap,footer{max-width:1080px;margin:auto;padding:0 24px}nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line)}
-.brand{font:700 20px/1.2 system-ui,sans-serif;text-decoration:none;letter-spacing:-.03em}.navlinks{display:flex;gap:20px;font:600 13px system-ui,sans-serif}.navlinks a{text-decoration:none}
-.hero{padding:74px 0 60px}.eyebrow,.pill{font:700 11px/1.4 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#53675b}.hero h1,article h1{font-size:clamp(40px,6vw,72px);line-height:1.08;letter-spacing:-.05em;margin:12px 0 20px;font-weight:500;max-width:840px}
-.lede{font-size:21px;line-height:1.55;color:var(--muted);max-width:650px}.disclosure{background:#f4efe5;border:1px solid #e9dcc5;border-radius:12px;padding:12px 16px;font:600 13px/1.5 system-ui,sans-serif;color:#514633;margin:28px 0}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:0 0 80px}.card{display:block;text-decoration:none;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;transition:transform .2s,box-shadow .2s}.card:hover{transform:translateY(-3px);box-shadow:0 12px 35px #20382a17}
-.visual{height:190px;display:flex;align-items:end;padding:22px;background:var(--sage);font:500 28px/1.1 Georgia,serif;letter-spacing:-.04em}.visual.peach{background:linear-gradient(135deg,#f6e6d9,#f3d9c7)}.visual.sage{background:linear-gradient(135deg,#e5eadf,#cadbcd)}.visual.lilac{background:linear-gradient(135deg,#f0eaf2,#e0d9e8)}
-.cardbody{padding:21px}.card h2{font-size:24px;line-height:1.2;letter-spacing:-.03em;margin:9px 0}.card p{font-size:15px;line-height:1.55;color:var(--muted);margin:0 0 15px}.read{font:700 13px system-ui,sans-serif;color:#37634c}
-.article{max-width:760px;padding:54px 24px 80px;margin:auto}.article h1{font-size:clamp(39px,5vw,62px)}.article h2{font-size:27px;line-height:1.2;letter-spacing:-.025em;margin:40px 0 12px}.article p{margin:0 0 18px}.article .lede{font-size:21px}.cta{display:inline-block;background:#365b47;color:white;text-decoration:none;border-radius:999px;padding:13px 22px;font:700 14px system-ui,sans-serif;margin:16px 0 24px}.cta:hover{background:#284638}.product-note{background:#edf1e9;padding:24px;border-radius:16px;margin:28px 0}.product-note p{margin:0}.disclaimer{border-top:1px solid var(--line);padding-top:22px;margin-top:48px;color:var(--muted);font:13px/1.6 system-ui,sans-serif}footer{border-top:1px solid var(--line);padding-top:28px;padding-bottom:38px;color:var(--muted);font:13px system-ui,sans-serif}
-@media(max-width:720px){nav{min-height:66px}.navlinks{gap:12px}.hero{padding:52px 0 42px}.grid{grid-template-columns:1fr;gap:16px}.visual{height:150px}.article{padding-top:38px}body{font-size:16px}}
-"""
-
-
-def esc(value: str) -> str:
-    return html.escape(value, quote=True)
-
-
-def document(title: str, description: str, body: str, canonical: str) -> str:
-    return f"""<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="{esc(description)}"><link rel="canonical" href="{esc(canonical)}">
-<title>{esc(title)} | Daily Wellness Notes</title><style>{CSS}</style></head>
-<body><nav><a class="brand" href="{SITE}/">Daily Wellness Notes</a><div class="navlinks"><a href="{SITE}/#skin">Skin</a><a href="{SITE}/#hair">Hair</a><a href="{SITE}/#slow">Slow living</a></div></nav>{body}
-<footer>Daily Wellness Notes · Gentle ideas for everyday routines</footer></body></html>"""
-
-
-def render_article(article: dict) -> str:
-    product = PRODUCTS[article["product"]]
-    paras = []
-    for i, (heading, paragraph) in enumerate(article["sections"]):
-        paras.append(f"<section><h2>{esc(heading)}</h2><p>{esc(paragraph)}</p></section>")
-        if i == 2:
-            paras.append(f'<a class="cta" href="{esc(product["link"])}" target="_blank" rel="sponsored nofollow noopener noreferrer">Explore the product ↗</a>')
-    words = re.findall(r"\b[\w’'-]+\b", " ".join(p for _, p in article["sections"]) + " " + article["closing"])
-    if not 300 <= len(words) <= 600:
-        raise ValueError(f'{article["slug"]}: {len(words)} words')
-    body = (
-        f'<main class="article"><div class="pill">{esc(product["category"])}</div>'
-        f'<div class="disclosure">{esc(AFFILIATE_DISCLOSURE)}</div>'
-        f'<h1>{esc(article["title"])}</h1><p class="lede">{esc(article["dek"])}</p>'
-        + "".join(paras)
-        + f'<p>{esc(article["closing"])}</p><div class="product-note"><p>Curious about {esc(product["name"])}? Review the current details and ingredients before deciding whether it fits your routine.</p></div>'
-        + f'<a class="cta" href="{esc(product["link"])}" target="_blank" rel="sponsored nofollow noopener noreferrer">Explore the product ↗</a>'
-        + f'<div class="disclaimer">{esc(DISCLAIMER)}</div></main>'
-    )
-    url = f'{SITE}/yazi/{article["slug"]}.html'
-    return document(article["title"], article["dek"], body, url)
-
-
-def render_home() -> str:
-    cards = []
-    seen_anchors = set()
-    for article in ARTICLES:
-        product = PRODUCTS[article["product"]]
-        anchor = {"kolajen": "skin", "sac": "hair", "stres": "slow"}[article["product"]]
-        anchor_attr = f' id="{anchor}"' if anchor not in seen_anchors else ""
-        seen_anchors.add(anchor)
-        cards.append(
-            f'<a class="card"{anchor_attr} href="{SITE}/yazi/{article["slug"]}.html">'
-            f'<div class="visual {product["color"]}">{esc(product["category"])}</div>'
-            f'<div class="cardbody"><div class="pill">{esc(product["category"])}</div>'
-            f'<h2>{esc(article["title"])}</h2><p>{esc(article["dek"])}</p>'
-            '<span class="read">Read the guide →</span></div></a>'
-        )
-    body = (
-        '<main class="wrap"><header class="hero"><div class="eyebrow">Everyday wellness, thoughtfully</div>'
-        '<h1>Gentle rituals for real life.</h1><p class="lede">Explore approachable ideas for skin care, hair care, and quieter moments at home. Start with one small step and make it your own.</p>'
-        f'<div class="disclosure">{esc(AFFILIATE_DISCLOSURE)}</div></header>'
-        '<div class="grid">' + "".join(cards) + '</div></main>'
-    )
-    return document("Home", "Gentle skin care, hair care, and slow living ideas.", body, SITE + "/")
-
-
 def main() -> None:
+    from rich_renderer import image_catalog, render_article, render_home
+
     output = ROOT / "yazi"
     output.mkdir(exist_ok=True)
+    catalog = image_catalog(ROOT)
     for article in ARTICLES:
-        (output / f'{article["slug"]}.html').write_text(render_article(article), encoding="utf-8")
-    (ROOT / "index.html").write_text(render_home(), encoding="utf-8")
-    print(f"Built {len(ARTICLES)} articles and the homepage.")
+        (output / f'{article["slug"]}.html').write_text(
+            render_article(article, ARTICLES, PRODUCTS, catalog, SITE),
+            encoding="utf-8",
+        )
+    (ROOT / "index.html").write_text(
+        render_home(ARTICLES, PRODUCTS, catalog, SITE), encoding="utf-8"
+    )
+    print(f"Built {len(ARTICLES)} rich articles and the homepage.")
 
 
 if __name__ == "__main__":

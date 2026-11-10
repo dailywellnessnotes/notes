@@ -68,9 +68,9 @@ def main() -> None:
         content = article.read_text(encoding="utf-8")
         if "This page contains affiliate links." not in content:
             raise ValueError(f"Missing affiliate disclosure: {article}")
-        if content.count('class="cta"') < 2:
-            raise ValueError(f"Missing CTA buttons: {article}")
-        if "This content is not medical advice." not in content:
+        if content.count("affiliate-button") < 4:
+            raise ValueError(f"Missing affiliate buttons: {article}")
+        if "This content is for general information and is not medical advice." not in content:
             raise ValueError(f"Missing disclaimer: {article}")
     print(f"Validated 42 unique 1000×1500 JPG pins, 9 articles, and {dates[0]} through {dates[-1]} ET.")
 
